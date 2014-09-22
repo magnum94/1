@@ -10,17 +10,11 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Resources;
 
-namespace ЛР7
+namespace ЛР1
 {
     public partial class Form1 : Form
     {
-        public interface Interface
-        {
-            Bitmap bitmap { get; set; }
-            void Create(Size size);
-            void Move(int x, int y, PictureBox pb);
-        }
-        abstract class Figure : Interface
+        abstract class Figure
         {
             public abstract Bitmap bitmap { get; set; }
             public abstract void Create(Size size);
@@ -49,8 +43,12 @@ namespace ЛР7
             {
                 pb.Location = new Point(x, y);
             }
+            public virtual bool type()
+            {
+                return false;
+            }
         }
-        class Smailik2 : Figure
+        class Smailik2 : Smailik1
         {
             public override Bitmap bitmap { get; set; }
             public override void Create(Size size)
@@ -60,6 +58,10 @@ namespace ЛР7
             public override void Move(int x, int y, PictureBox pb)
             {
                 pb.Location = new Point(x, y);
+            }
+            public override bool type()
+            {
+                return true;
             }
         }
 
@@ -72,6 +74,7 @@ namespace ЛР7
         private List<int> nomera = new List<int>();
         private delegate void PaintDelegate(int x, int y);
         private event PaintDelegate NewPaintEventPaint;
+        public int type=1;
 
         public Form1()
         {
@@ -83,15 +86,16 @@ namespace ЛР7
             var obj = (RadioButton)sender;
             switch (obj.Text.ToString())
             {
-                case "Звездочка": figur.Add(new Zvezda()); break;
-                case "Смайлик №1": figur.Add(new Smailik1()); break;
-                case "Смайлик №2": figur.Add(new Smailik2()); break;
+                case "Звездочка": type = 1;  break;
+                case "Смайлик №2": type = 2;  break;
+                case "Смайлик №1": type = 3;  break;
+                
             }
         }
         private void OnMouseClick(object sender, MouseEventArgs e)
         {
-            int x = e.X-trackBar1.Value/2;
-            int y = e.Y-trackBar1.Value/2;
+            int x = e.X-50;
+            int y = e.Y-50;
             if (e.Button == MouseButtons.Left)
                 NewPaintEventPaint.Invoke(x, y);
         }
@@ -119,25 +123,36 @@ namespace ЛР7
                 }
                 if (chkBoxPaint.Checked)
                 {
+                    if(type == 1) figur.Add(new Zvezda());
+                else if( type == 2) figur.Add(new Smailik2()); 
+                       else figur.Add(new Smailik1());
                     pictureBox.Add(new PictureBox());
-                    SetIndex(figur.Last());
+                    nomera.Add(type);
                     pictureBox.Last().Location = new Point(x, y);
-                    figur.Last().Create(new Size(trackBar1.Value, trackBar1.Value));
+                    figur.Last().Create(new Size(100, 100));
                     pictureBox.Last().Size = figur.Last().bitmap.Size;
                     this.Controls.Add(pictureBox.Last());
-                    pictureBox.Last().Image = figur.Last().bitmap;
-                    if (figur.Last() as Zvezda != null) figur.Add(new Zvezda());
-                    if (figur.Last() as Smailik1 != null) figur.Add(new Smailik1());
-                    if (figur.Last() as Smailik2 != null) figur.Add(new Smailik2());
+                    pictureBox.Last().Image = figur.Last().bitmap;                    
+                }
+                if (checkBox1.Checked)
+                {
+                    bool a = true;
+                    int i = 0;
+                    while (a)
+                    {
+                        if (i < nomera.Count)
+                            if (figur[i] as Smailik2 !=null)
+                            {
+                                this.Controls.Remove(pictureBox[i]);
+                                pictureBox.RemoveAt(i);
+                                nomera.RemoveAt(i);
+                            }
+                            else i++;
+                        else a = false;
+                    }
                 }
             
 
-        }
-        private void SetIndex(Figure f)
-        {          
-            if (f as Zvezda != null) nomera.Add(1);
-            if (f as Smailik1 != null) nomera.Add(2);
-            if (f as Smailik2 != null) nomera.Add(3);
         }
 
         private void PaintChBox_Checked(object sender, EventArgs e)
@@ -181,15 +196,12 @@ namespace ЛР7
                     if (nomera[i] == nomer)
                     {
                         if ((chkBoxMove.Checked) && (pictureBox.Count != 0))
-                            figur[i].Move(e.X - trackBar1.Value / 2, e.Y - trackBar1.Value / 2, pictureBox[i]);
+                            figur[i].Move(e.X - 50, e.Y - 50, pictureBox[i]);
                         i++;
                     }
                     else i++;
                 else a = false;
             }
-            //if ((chkBoxMove.Checked)&&(pictureBox.Count!=0))
-            //    figur.Last().Move(e.X-trackBar1.Value/2, e.Y-trackBar1.Value/2, pictureBox.Last());
         }
-
     }
 }
